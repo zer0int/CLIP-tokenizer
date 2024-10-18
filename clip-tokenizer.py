@@ -124,18 +124,24 @@ def process_file(tokenizer, filename, reverse=False):
         for line in lines:
             line = line.strip()
             if reverse:
-                token_ids = list(map(int, line.split(',')))
-                decoded_text = tokenizer.decode(token_ids)
-                tokens = tokenizer.ids_to_tokens(token_ids)
-                output_line = f"{decoded_text}\t{tokens}\t{','.join(map(str, token_ids))}\n"
+                try:
+                    token_ids = list(map(int, line.split(',')))
+                    decoded_text = tokenizer.decode(token_ids)
+                    tokens = tokenizer.ids_to_tokens(token_ids)
+                    token_count = len(tokens)
+                    output_line = f"{token_count}: {decoded_text}\t{tokens}\t{','.join(map(str, token_ids))}\n"
+                except ValueError:
+                    print(f"Error: The following line is not a valid comma-separated list of token IDs: '{line}'.\n'--reverse' expects input (example): '123,4567,9999'")
+                    break
             else:
                 token_ids = tokenizer.encode(line)
                 tokens = tokenizer.ids_to_tokens(token_ids)
-                output_line = f"{line}\t{tokens}\t{','.join(map(str, token_ids))}\n"
+                token_count = len(tokens)
+                output_line = f"{token_count}: {line}\t{tokens}\t{','.join(map(str, token_ids))}\n"
             
             output_file.write(output_line)
     
-    print(f"Processing completed. Results saved to '{output_filename}'")
+        print(f"Processing completed. Results saved to '{output_filename}'")
 
 def main():
     parser = argparse.ArgumentParser(description="CLIP Tokenizer Tool")
@@ -150,16 +156,22 @@ def main():
         process_file(tokenizer, args.file, args.reverse)
     elif args.text:
         if args.reverse:
-            token_ids = list(map(int, args.text.split(',')))
-            decoded_text = tokenizer.decode(token_ids)
-            tokens = tokenizer.ids_to_tokens(token_ids)
-            print(f"{decoded_text}\t{tokens}\t{','.join(map(str, token_ids))}")
+            try:
+                token_ids = list(map(int, args.text.split(',')))
+                decoded_text = tokenizer.decode(token_ids)
+                tokens = tokenizer.ids_to_tokens(token_ids)
+                token_count = len(tokens)
+                print(f"{token_count}: {decoded_text}\t{tokens}\t{','.join(map(str, token_ids))}")
+            except ValueError:
+                print("Error: The input text is not a valid comma-separated list of token IDs.\n'--reverse' expects input (example): '123,4567,9999'")
         else:
             token_ids = tokenizer.encode(args.text)
             tokens = tokenizer.ids_to_tokens(token_ids)
-            print(f"{args.text}\t{tokens}\t{','.join(map(str, token_ids))}")
+            token_count = len(tokens)
+            print(f"{token_count}: {args.text}\t{tokens}\t{','.join(map(str, token_ids))}")
     else:
         print("Please provide either --text or --file input.")
+
 
 if __name__ == "__main__":
     main()
